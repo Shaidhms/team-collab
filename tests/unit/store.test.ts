@@ -10,13 +10,19 @@ describe('Store', () => {
   });
 
   describe('tasks', () => {
-    it('creates a task with text and creator', () => {
+    it('creates a task with text, creator, and default medium priority', () => {
       const task = store.createTask({ text: 'Write tests', createdBy: 'Ada' });
       expect(task.id).toBeTruthy();
       expect(task.text).toBe('Write tests');
       expect(task.createdBy).toBe('Ada');
       expect(task.done).toBe(false);
+      expect(task.priority).toBe('medium');
       expect(task.createdAt).toBe(task.updatedAt);
+    });
+
+    it('honours an explicit priority on create', () => {
+      const task = store.createTask({ text: 'urgent', createdBy: 'Ada', priority: 'high' });
+      expect(task.priority).toBe('high');
     });
 
     it('lists tasks newest-first', async () => {
@@ -31,24 +37,30 @@ describe('Store', () => {
     it('updates a task and bumps updatedAt', async () => {
       const created = store.createTask({ text: 'one', createdBy: 'X' });
       await new Promise((r) => setTimeout(r, 5));
-      const updated = store.updateTask(created.id, { done: true });
+      const updated = store.updateTask(created.id, { done: true }, 'X');
       expect(updated?.done).toBe(true);
       expect(updated?.text).toBe('one');
       expect(updated?.updatedAt).not.toBe(created.updatedAt);
     });
 
+    it('updates priority', () => {
+      const created = store.createTask({ text: 'one', createdBy: 'X' });
+      const updated = store.updateTask(created.id, { priority: 'high' }, 'X');
+      expect(updated?.priority).toBe('high');
+    });
+
     it('returns null when updating a missing task', () => {
-      expect(store.updateTask('missing', { done: true })).toBeNull();
+      expect(store.updateTask('missing', { done: true }, 'X')).toBeNull();
     });
 
     it('deletes a task and reports success', () => {
       const created = store.createTask({ text: 'gone', createdBy: 'X' });
-      expect(store.deleteTask(created.id)).toBe(true);
+      expect(store.deleteTask(created.id, 'X')).toBe(true);
       expect(store.getTask(created.id)).toBeNull();
     });
 
     it('reports failure when deleting a missing task', () => {
-      expect(store.deleteTask('missing')).toBe(false);
+      expect(store.deleteTask('missing', 'X')).toBe(false);
     });
   });
 
@@ -64,20 +76,24 @@ describe('Store', () => {
   });
 
   describe('subscriptions', () => {
-    it('emits task:created to subscribers', () => {
+    it('emits task:created with the actor', () => {
       const events: StoreEvent[] = [];
       store.subscribe((e) => events.push(e));
       store.createTask({ text: 'x', createdBy: 'Ada' });
       expect(events).toHaveLength(1);
-      expect(events[0]?.type).toBe('task:created');
+      const first = events[0];
+      expect(first?.type).toBe('task:created');
+      if (first?.type === 'task:created') {
+        expect(first.by).toBe('Ada');
+      }
     });
 
     it('emits task:updated and task:deleted', () => {
       const events: StoreEvent[] = [];
       const created = store.createTask({ text: 'x', createdBy: 'Ada' });
       store.subscribe((e) => events.push(e));
-      store.updateTask(created.id, { done: true });
-      store.deleteTask(created.id);
+      store.updateTask(created.id, { done: true }, 'Ben');
+      store.deleteTask(created.id, 'Ben');
       expect(events.map((e) => e.type)).toEqual(['task:updated', 'task:deleted']);
     });
 

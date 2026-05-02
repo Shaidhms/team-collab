@@ -45,7 +45,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const task = store.createTask({ text: parsed.data.text, createdBy: session.name });
-  logger.info('task.created', { taskId: task.id, by: session.name });
+  const task = store.createTask({
+    text: parsed.data.text,
+    priority: parsed.data.priority,
+    createdBy: session.name,
+  });
+  logger.info('task.created', { taskId: task.id, by: session.name, priority: task.priority });
   return NextResponse.json({ task }, { status: 201 });
 }

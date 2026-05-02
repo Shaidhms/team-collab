@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     );
   }
 
-  const task = store.updateTask(params.id, parsed.data);
+  const task = store.updateTask(params.id, parsed.data, session.name);
   if (!task) {
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }
@@ -68,7 +68,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     );
   }
 
-  const ok = store.deleteTask(params.id);
+  const ok = store.deleteTask(params.id, session.name);
   if (!ok) {
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }

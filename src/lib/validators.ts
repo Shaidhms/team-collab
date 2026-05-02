@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PRIORITIES } from '@/types';
 
 export const TaskTextSchema = z
   .string()
@@ -6,14 +7,18 @@ export const TaskTextSchema = z
   .min(1, 'Task text required')
   .max(280, 'Task text must be 280 characters or fewer');
 
+export const PrioritySchema = z.enum(PRIORITIES);
+
 export const CreateTaskSchema = z.object({
   text: TaskTextSchema,
+  priority: PrioritySchema.optional(),
 });
 
 export const UpdateTaskSchema = z
   .object({
     text: TaskTextSchema.optional(),
     done: z.boolean().optional(),
+    priority: PrioritySchema.optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field must be provided',

@@ -2,6 +2,7 @@ import { store } from '@/lib/store';
 import { readSession } from '@/lib/session';
 import { TaskBoard } from '@/components/task-board';
 import { JoinPrompt } from '@/components/join-prompt';
+import { Avatar } from '@/components/avatar';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,9 +18,27 @@ export default async function Home() {
     <main id="main">
       <header className="app-header">
         <div>
+          <span className="brand-mark">
+            <span className="brand-icon" aria-hidden="true">
+              TC
+            </span>
+            <span className="visually-hidden">Team Collab logo</span>
+          </span>
           <h1>Team Collab</h1>
-          <p>Real-time shared task board. Open in another tab — your team sees changes live.</p>
+          <p className="tagline">
+            Real-time shared task board. Add a task in one tab, watch it appear instantly in the
+            other.
+          </p>
         </div>
+
+        {session && (
+          <div className="user-chip" aria-label={`Signed in as ${session.name}`}>
+            <Avatar name={session.name} size="sm" />
+            <span>
+              Signed in as <strong>{session.name}</strong>
+            </span>
+          </div>
+        )}
       </header>
 
       {session ? (
@@ -34,7 +53,7 @@ export default async function Home() {
 
       <footer className="app-footer">
         <span>
-          Built with Next.js 14, Server-Sent Events, and Google Cloud Run · {new Date().getFullYear()}
+          Built with Next.js 14 · Server-Sent Events · Google Cloud Run · {new Date().getFullYear()}
         </span>
         <a
           href="https://github.com/Shaidhms/team-collab"
