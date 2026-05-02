@@ -1,0 +1,40 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:$COMMIT_SHA
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:latest
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - --all-tags
+      - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - team-collab
+      - --image=us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:$COMMIT_SHA
+      - --region=us-central1
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=3000
+      - --memory=512Mi
+      - --cpu=1
+      - --min-instances=0
+      - --max-instances=3
+      - --concurrency=80
+      - --set-env-vars=NODE_ENV=production,NEXT_TELEMETRY_DISABLED=1
+
+images:
+  - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:$COMMIT_SHA
+  - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY
