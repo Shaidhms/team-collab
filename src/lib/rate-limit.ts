@@ -42,8 +42,11 @@ export class RateLimiter {
   }
 }
 
-// Default: 30 mutations per minute per IP.
-export const mutationLimiter = new RateLimiter(30, 30 / 60_000);
+// Default: 200 mutations per minute per IP.
+// 30 was too tight for live multi-tab demos (presence reconnects, rapid
+// task editing) — kept abuse protection while leaving headroom for normal
+// team usage.
+export const mutationLimiter = new RateLimiter(200, 200 / 60_000);
 
 export function ipFromHeaders(headers: Headers): string {
   const fwd = headers.get('x-forwarded-for');
