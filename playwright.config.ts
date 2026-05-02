@@ -31,6 +31,12 @@ export default defineConfig({
     env: {
       NODE_ENV: 'production',
       PORT: String(PORT),
+      // Required by HMAC-signed sessions. CI sets it explicitly; locally
+      // we provide a deterministic dev value so `npm run test:e2e` works
+      // out of the box.
+      SESSION_SECRET: process.env.SESSION_SECRET ?? 'playwright-dev-secret',
+      // Avoid trying to reach Firestore from CI/local without ADC.
+      STORE_BACKEND: process.env.STORE_BACKEND ?? 'memory',
     },
   },
 });
