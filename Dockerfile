@@ -3,18 +3,15 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm install --omit=optional --no-audit --no-fund
+# IMPORTANT: do NOT pass --omit=optional. firebase-admin lists
+# @google-cloud/firestore and @google-cloud/storage as optional deps; without
+# them the firebase-admin/firestore import path fails at build time.
+RUN npm ci --no-audit --no-fund
 
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# NEXT_PUBLIC_* values are inlined into the client bundle at build time.
-# Pass them as --build-arg in CI; they are public values protected by RLS.
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
