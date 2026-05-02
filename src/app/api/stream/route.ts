@@ -17,6 +17,10 @@ export async function GET(req: NextRequest) {
   const presenceId = globalThis.crypto.randomUUID();
   const encoder = new TextEncoder();
 
+  // Fetch initial state up-front so the stream `start` callback can stay sync.
+  const initialTasks = await store.listTasks();
+  const initialPresence = store.listPresence();
+
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       let closed = false;
@@ -31,7 +35,7 @@ export async function GET(req: NextRequest) {
       };
 
       // Initial snapshot.
-      send('snapshot', { tasks: store.listTasks(), presence: store.listPresence() });
+      send('snapshot', { tasks: initialTasks, presence: initialPresence });
 
       // Register presence after snapshot so the joining user appears in the
       // broadcast presence:joined event to peers, not duplicated in their own snapshot.

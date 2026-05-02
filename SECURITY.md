@@ -12,7 +12,7 @@ This is a single-instance demo with no persistence and no real auth — display 
 |---|---|---|
 | Server CPU/memory | Spam mutation requests, runaway SSE connections | Per-IP token bucket on mutations (30/min). SSE writes are bounded by `req.signal.abort` cleanup. |
 | Browser DOM | XSS via task text or display name | React auto-escapes all rendered text. `dangerouslySetInnerHTML` is **lint-banned**. CSP `script-src 'self'` (no inline) in production. Display name regex rejects `<>&` and similar. |
-| Cookie session | CSRF on mutation endpoints | `SameSite=Lax` + `Secure` + `httpOnly` cookies. Origin is implied by SameSite for the simple form/JSON requests in scope. |
+| Cookie session | CSRF + impersonation by cookie tampering | `SameSite=Lax` + `Secure` + `httpOnly` cookies. **Cookie value is HMAC-SHA256-signed with `SESSION_SECRET` (Secret Manager-backed in prod)** — tampering with the name field invalidates the signature and the server treats the request as unauthenticated. |
 | Network in transit | Eavesdropping, downgrade | HSTS with `preload`, `includeSubDomains`, 2-year max-age. Cloud Run terminates TLS. |
 | Server input | Malformed bodies, oversized payloads | Every mutation validates with zod (length caps, character regex). JSON parse is wrapped in `try/catch` with a 400 response. |
 
@@ -21,7 +21,9 @@ This is a single-instance demo with no persistence and no real auth — display 
 - `next.config.mjs` — Content Security Policy, HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy locking down camera/mic/geolocation/FLoC, `poweredByHeader: false`.
 - `src/lib/validators.ts` — zod schemas: `TaskTextSchema` (1–280 chars), `DisplayNameSchema` (1–40 chars, unicode-letter/digit/space/`_.-'` only).
 - `src/lib/rate-limit.ts` — in-memory token-bucket limiter; mutations call `mutationLimiter.check(ipFromHeaders(...))` and return `429` with `Retry-After` when exhausted.
-- `src/lib/session.ts` — cookie set as `httpOnly`, `secure` in prod, `sameSite: 'lax'`, `path: '/'`, 1-year max-age.
+- `src/lib/session.ts` — cookie set as `httpOnly`, `secure` in prod, `sameSite: 'lax'`, `path: '/'`, 1-year max-age. Payload is JSON-stringified and signed via `src/lib/cookie-sign.ts` (HMAC-SHA256, `timingSafeEqual` comparison). `SESSION_SECRET` is required and pulled from Secret Manager (`session-secret`) in Cloud Run.
+- `src/lib/cookie-sign.ts` — pure `node:crypto` signing/verification. Format is `<base64url(payload)>.<base64url(hmac)>`. Sixteen unit tests cover round-trip, multi-byte UTF-8, tamper rejection, signature length mismatch, and missing-secret behavior.
+- `firestore.rules` — denies all client read/write. Server uses `firebase-admin` and bypasses rules; the rules are defensive should a client SDK be added later.
 - `src/lib/logger.ts` — never logs request bodies; logs minimal fields (taskId, presenceId, name) for audit/debug.
 - `.eslintrc.json` — `react/no-danger: error`, `react/jsx-no-target-blank` requires `noreferrer`, custom rule banning `dangerouslySetInnerHTML` JSX attribute.
 

@@ -1,0 +1,12 @@
+// Server uses firebase-admin which bypasses these rules.
+// Locking client access closed defensively. When client-side Firestore is
+// added, replace this with auth-checked rules.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

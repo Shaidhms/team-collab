@@ -49,6 +49,8 @@ steps:
       - --max-instances=3
       - --concurrency=80
       - --set-env-vars=NODE_ENV=production,NEXT_TELEMETRY_DISABLED=1
+      - --set-secrets=SESSION_SECRET=session-secret:latest
+      - --timeout=3600
 
 images:
   - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:$COMMIT_SHA

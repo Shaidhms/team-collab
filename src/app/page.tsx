@@ -11,7 +11,7 @@ export default async function Home() {
 
   // Server-side initial render of tasks + presence so the client hydrates
   // with real data, not a loading spinner. Cuts perceived latency.
-  const initialTasks = store.listTasks();
+  const initialTasks = await store.listTasks();
   const initialPresence = store.listPresence();
 
   return (

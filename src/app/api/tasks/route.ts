@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET() {
-  return NextResponse.json({ tasks: store.listTasks() });
+  return NextResponse.json({ tasks: await store.listTasks() });
 }
 
 export async function POST(req: NextRequest) {
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const task = store.createTask({
+  const task = await store.createTask({
     text: parsed.data.text,
     priority: parsed.data.priority,
     createdBy: session.name,
