@@ -1,11 +1,17 @@
 /** @type {import('next').NextConfig} */
 
-// Content Security Policy — strict by default, no inline scripts in prod.
-// 'unsafe-inline' for styles is acceptable for the small hand-written CSS;
-// when shadcn/Tailwind arrives this should move to nonce-based CSP.
+// Content Security Policy.
+// Next.js App Router emits inline <script> tags for client-side hydration
+// (RSC streaming flight data, set-public-path). Without 'unsafe-inline' those
+// scripts are blocked and React never hydrates — the page renders but
+// click handlers and forms become inert. The proper hardening (nonce-based
+// CSP via middleware) is on the roadmap; for now we accept the inline
+// allowance, paired with the structural defenses (no dangerouslySetInnerHTML
+// — lint-enforced — and Tiptap-style strict schemas for any rich text we
+// add later).
 const cspProd = [
   "default-src 'self'",
-  "script-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
