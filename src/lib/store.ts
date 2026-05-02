@@ -101,6 +101,17 @@ export class MemoryStore implements TaskStore {
   }
 
   addPresence(input: { id: string; name: string }): Presence {
+    // Dedupe by name. A user opening the page in multiple tabs / refreshing
+    // creates a fresh connection (and a fresh presence id) every time, but
+    // semantically they are still one teammate. Drop any prior presence
+    // entries with the same name before adding the new one so the list
+    // never piles up duplicates when SSE cleanup fails to fire.
+    for (const [existingId, existing] of this.presenceMap) {
+      if (existing.name === input.name) {
+        this.presenceMap.delete(existingId);
+        this.emit({ type: 'presence:left', id: existingId });
+      }
+    }
     const presence: Presence = {
       id: input.id,
       name: input.name,
@@ -259,6 +270,17 @@ export class FirestoreStore implements TaskStore {
   }
 
   addPresence(input: { id: string; name: string }): Presence {
+    // Dedupe by name. A user opening the page in multiple tabs / refreshing
+    // creates a fresh connection (and a fresh presence id) every time, but
+    // semantically they are still one teammate. Drop any prior presence
+    // entries with the same name before adding the new one so the list
+    // never piles up duplicates when SSE cleanup fails to fire.
+    for (const [existingId, existing] of this.presenceMap) {
+      if (existing.name === input.name) {
+        this.presenceMap.delete(existingId);
+        this.emit({ type: 'presence:left', id: existingId });
+      }
+    }
     const presence: Presence = {
       id: input.id,
       name: input.name,
