@@ -19,7 +19,7 @@ steps:
     args:
       - build
       - -t
-      - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:$COMMIT_SHA
+      - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:$BUILD_ID
       - -t
       - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:latest
       - .
@@ -38,7 +38,7 @@ steps:
       - run
       - deploy
       - team-collab
-      - --image=us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:$COMMIT_SHA
+      - --image=us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:$BUILD_ID
       - --region=us-central1
       - --platform=managed
       - --allow-unauthenticated
@@ -53,7 +53,7 @@ steps:
       - --timeout=3600
 
 images:
-  - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:$COMMIT_SHA
+  - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:$BUILD_ID
   - us-central1-docker.pkg.dev/$PROJECT_ID/team-collab/team-collab:latest
 
 options:
