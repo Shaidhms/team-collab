@@ -1,76 +1,49 @@
-'use client';
+import { store } from '@/lib/store';
+import { readSession } from '@/lib/session';
+import { TaskBoard } from '@/components/task-board';
+import { JoinPrompt } from '@/components/join-prompt';
 
-import { useEffect, useState } from 'react';
+export const dynamic = 'force-dynamic';
 
-type Task = { id: string; text: string; done: boolean };
+export default async function Home() {
+  const session = await readSession();
 
-const STORAGE_KEY = 'team-collab.tasks.v1';
-
-export default function Home() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [input, setInput] = useState('');
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        setTasks(JSON.parse(raw));
-      } catch {}
-    }
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (loaded) localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  }, [tasks, loaded]);
-
-  const add = (e: React.FormEvent) => {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text) return;
-    setTasks([{ id: crypto.randomUUID(), text, done: false }, ...tasks]);
-    setInput('');
-  };
-
-  const toggle = (id: string) =>
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
-
-  const remove = (id: string) => setTasks(tasks.filter((t) => t.id !== id));
+  // Server-side initial render of tasks + presence so the client hydrates
+  // with real data, not a loading spinner. Cuts perceived latency.
+  const initialTasks = store.listTasks();
+  const initialPresence = store.listPresence();
 
   return (
-    <main>
-      <h1>Team Collab</h1>
-      <p className="muted">Warmup task list. Local-only for now.</p>
+    <main id="main">
+      <header className="app-header">
+        <div>
+          <h1>Team Collab</h1>
+          <p>Real-time shared task board. Open in another tab — your team sees changes live.</p>
+        </div>
+      </header>
 
-      <form onSubmit={add}>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Add a task..."
-          aria-label="New task"
+      {session ? (
+        <TaskBoard
+          initialTasks={initialTasks}
+          initialPresence={initialPresence}
+          currentUser={session.name}
         />
-        <button type="submit">Add</button>
-      </form>
+      ) : (
+        <JoinPrompt />
+      )}
 
-      <ul>
-        {tasks.map((t) => (
-          <li key={t.id} className={t.done ? 'done' : ''}>
-            <input
-              type="checkbox"
-              checked={t.done}
-              onChange={() => toggle(t.id)}
-              aria-label={`Mark ${t.text} as ${t.done ? 'not done' : 'done'}`}
-              style={{ flex: 'none', width: 'auto' }}
-            />
-            <span>{t.text}</span>
-            <button className="ghost" onClick={() => remove(t.id)} aria-label="Remove task">
-              ×
-            </button>
-          </li>
-        ))}
-        {tasks.length === 0 && loaded && <p className="muted">No tasks yet.</p>}
-      </ul>
+      <footer className="app-footer">
+        <span>
+          Built with Next.js 14, Server-Sent Events, and Google Cloud Run · {new Date().getFullYear()}
+        </span>
+        <a
+          href="https://github.com/Shaidhms/team-collab"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Source on GitHub
+        </a>
+      </footer>
     </main>
   );
 }

@@ -1,0 +1,18 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "react/no-danger": "error",
+    "react/jsx-no-target-blank": ["error", { "allowReferrer": false }],
+    "react/jsx-key": "error",
+    "react/self-closing-comp": "warn",
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "JSXAttribute[name.name='dangerouslySetInnerHTML']",
+        "message": "Avoid dangerouslySetInnerHTML — use safe rendering instead."
+      }
+    ],
+    "@next/next/no-img-element": "error"
+  }
+}

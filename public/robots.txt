@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+# This is a demo collaboration tool — public crawling is fine.
