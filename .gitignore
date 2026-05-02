@@ -9,3 +9,6 @@ dist
 out
 coverage
 .vercel
+*.tsbuildinfo
+playwright-report
+test-results
